@@ -4,7 +4,6 @@ import pytz
 import requests
 import pandas as pd
 
-# Телеграм параметры
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
@@ -24,7 +23,12 @@ def send_telegram_message(message):
 def extract_sizes_from_excel(file_path):
     log("📄 Читаем Excel-файл...")
     df = pd.read_excel(file_path, engine='openpyxl')
-    column_c = df.iloc[:, 2].dropna().astype(str)
+
+    # ✅ Фильтрация по статусу
+    df = df[df["Статус"] == "Ожидает передачи курьеру"]
+
+    # ✅ Извлекаем колонку с названиями товаров
+    column_c = df["Название товара в Kaspi Магазине"].dropna().astype(str)
 
     sizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"]
     count = {size: 0 for size in sizes}
@@ -39,11 +43,6 @@ def extract_sizes_from_excel(file_path):
 def main():
     log("🚀 KASPI Excel BOT запущен")
     file_path = "ActiveOrders.xlsx"
-
-    # ↓↓↓ Здесь вставь ссылку на Excel, если хочешь скачать с Kaspi
-    # response = requests.get("https://...", headers=...)
-    # with open(file_path, "wb") as f:
-    #     f.write(response.content)
 
     if not os.path.exists(file_path):
         send_telegram_message("❌ Файл ActiveOrders.xlsx не найден.")
