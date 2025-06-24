@@ -80,8 +80,7 @@ def build_message(stats):
 
     lines = ["📦 Заказы на сборку:"]
     for color, sizes in stats.items():
-        lines.append(f"
-{color}:")
+        lines.append(f"\n{color}:")
         for size, count in sizes.items():
             lines.append(f"  {size} – {count}")
     return "\n".join(lines)
