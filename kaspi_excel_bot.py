@@ -10,7 +10,7 @@ BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 # === Настройки Kaspi ===
-DOWNLOAD_URL = "https://mc.shop.kaspi.kz/order/view/mc/order/export?presetFilter=KASPI_DELIVERY_CARGO_ASSEMBLY&merchantId=30067732&fromDate=1750705200000&toDate=1750791600000&_m=30067732"
+DOWNLOAD_URL = "https://mc.shop.kaspi.kz/order/view/mc/order/export?presetFilter=KASPI_DELIVERY_CARGO_ASSEMBLY"
 
 COOKIES = {
     "X-Mc-Api-Session-Id": "Y4-1c639cc5-583e-47f7-98ac-e6f5e0f80aac",
@@ -22,7 +22,8 @@ COOKIES = {
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
-    "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    "Accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "Referer": "https://kaspi.kz/mc/#/orders?status=KASPI_DELIVERY_CARGO_ASSEMBLY"
 }
 
 def log(msg):
@@ -41,13 +42,14 @@ def send_telegram_message(message):
 def download_excel():
     log("⬇️ Скачиваем Excel-файл с Kaspi...")
     response = requests.get(DOWNLOAD_URL, headers=HEADERS, cookies=COOKIES)
-    if response.status_code == 200:
+    log(f"🔎 Ответ Kaspi: {response.status_code}, длина: {len(response.content)} байт")
+    if response.status_code == 200 and len(response.content) > 1000:
         with open("ActiveOrders.xlsx", "wb") as f:
             f.write(response.content)
         log("✅ Файл сохранён как ActiveOrders.xlsx")
         return True
     else:
-        log(f"❌ Ошибка загрузки файла: {response.status_code}")
+        log("❌ Ошибка загрузки или файл пустой.")
         return False
 
 def extract_sizes_from_excel(file_path):
@@ -89,7 +91,7 @@ def main():
     log("🚀 KASPI BOT с автоскачиванием запущен")
 
     if not download_excel():
-        send_telegram_message("❌ Не удалось скачать Excel с Kaspi")
+        send_telegram_message("❌ Не удалось скачать Excel с Kaspi (возможно, куки устарели)")
         return
 
     stats = extract_sizes_from_excel("ActiveOrders.xlsx")
